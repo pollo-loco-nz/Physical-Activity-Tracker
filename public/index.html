@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MILF</title>
+  <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏃</text></svg>">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/vendor/chart.umd.js" defer></script>
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <!-- Logged-out screen -->
+  <section id="auth" class="auth" hidden>
+    <div class="auth-card">
+      <h1 class="brand-big"><span class="brand-mark">●</span> <span data-app-name>MILF</span></h1>
+      <p class="muted">Log what you do. See what everyone else is doing.</p>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-auth-tab="login" role="tab">Log in</button>
+        <button class="tab" data-auth-tab="register" role="tab">Join</button>
+      </div>
+      <form id="login-form" class="stack">
+        <label>Username <input name="username" autocomplete="username" required></label>
+        <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+        <button class="btn primary" type="submit">Log in</button>
+      </form>
+      <form id="register-form" class="stack" hidden>
+        <label>Invite code <input name="invite_code" required autocomplete="off"></label>
+        <label>Username <input name="username" required pattern="[A-Za-z0-9_]{3,20}" title="3–20 letters, numbers or _" autocomplete="username"></label>
+        <label>Display name <input name="display_name" maxlength="40" placeholder="What friends call you"></label>
+        <label>Password <input name="password" type="password" minlength="8" required autocomplete="new-password"></label>
+        <button class="btn primary" type="submit">Create account</button>
+      </form>
+      <p class="form-error" id="auth-error" role="alert"></p>
+    </div>
+  </section>
+
+  <!-- App shell -->
+  <div id="app" hidden>
+    <header class="topbar">
+      <a href="#/" class="brand"><span class="brand-mark">●</span> <span data-app-name>MILF</span></a>
+      <nav class="nav">
+        <a href="#/" data-nav="dashboard">Dashboard</a>
+        <a href="#/api" data-nav="api">API</a>
+      </nav>
+      <div class="topbar-right">
+        <button class="btn primary" id="log-btn">+ Log</button>
+        <a href="#/settings" id="me-link" class="me-link" title="Settings"></a>
+      </div>
+    </header>
+    <div class="layout">
+      <aside class="feed" aria-label="Activity feed">
+        <div class="feed-head"><h2>What's happening</h2></div>
+        <div id="feed-list" class="feed-list"></div>
+      </aside>
+      <main id="view" class="view"></main>
+    </div>
+  </div>
+
+  <!-- Log dialog -->
+  <dialog id="log-dialog" class="dialog">
+    <div class="dialog-head">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-log-tab="activity" role="tab">Activity</button>
+        <button class="tab" data-log-tab="metrics" role="tab">Weight</button>
+      </div>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </div>
+    <form id="activity-form" class="stack">
+      <input type="hidden" name="act_id">
+      <label>Title <input name="title" maxlength="80" required placeholder="Morning run round the bays"></label>
+      <div class="row">
+        <label>How long (minutes) <input name="duration_min" type="number" min="1" max="1440" step="1" inputmode="numeric" required placeholder="30"></label>
+        <label>Date <input name="occurred_at" type="date" required></label>
+      </div>
+      <div class="row">
+        <label>Type <input name="type" list="type-list" placeholder="run" maxlength="30"></label>
+        <label>Distance (km) <input name="distance_km" type="number" min="0" max="1000" step="0.01" inputmode="decimal" placeholder="Optional"></label>
+      </div>
+      <label>Description <textarea name="description" maxlength="500" rows="3" placeholder="Optional"></textarea></label>
+      <p class="form-error" role="alert"></p>
+      <button class="btn primary" type="submit">Save activity</button>
+    </form>
+    <form id="metrics-form" class="stack" hidden>
+      <div class="row">
+        <label>Weight (kg) <input name="weight_kg" type="number" min="20" max="400" step="0.1" inputmode="decimal" placeholder="e.g. 78.4" required></label>
+        <label>Date <input name="date" type="date" required></label>
+      </div>
+      <p class="muted small">Logging again for the same day replaces it.</p>
+      <p class="form-error" role="alert"></p>
+      <button class="btn primary" type="submit">Save weight</button>
+    </form>
+    <datalist id="type-list"></datalist>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

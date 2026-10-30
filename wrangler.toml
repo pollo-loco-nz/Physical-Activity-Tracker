@@ -1,0 +1,22 @@
+name = "milf"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "move-club"
+database_id = "712027c5-3c42-4244-9f01-b82805bc81e2"
+migrations_dir = "migrations"
+
+[vars]
+APP_NAME = "MILF"
+PBKDF2_ITERATIONS = "10000"
+TIMEZONE = "Pacific/Auckland"
+
+# Secret (not in this file): INVITE_CODE
+#   npx wrangler secret put INVITE_CODE
+# For local dev, put INVITE_CODE=... in a .dev.vars file instead.

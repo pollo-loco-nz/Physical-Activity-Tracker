@@ -1,0 +1,16 @@
+{
+  "name": "move-club",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler d1 migrations apply move-club --local && wrangler dev",
+    "deploy": "wrangler d1 migrations apply move-club --remote && wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "workerd@1.20261023.1": true
+  }
+}
