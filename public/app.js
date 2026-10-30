@@ -255,7 +255,7 @@ function bmi(weightKg, u) {
   const m = u.height_cm / 100;
   return (weightKg - (u.maori_mode ? MAORI_MODE_KG : 0)) / (m * m);
 }
-const maoriTag = (u) => (u.maori_mode ? `<span class="mm-tag" title="BMI uses weight minus ${MAORI_MODE_KG} kg">Māori Mode</span>` : '');
+const maoriTag = (u) => (u.maori_mode ? `<span class="mm-tag">Māori Mode</span>` : '');
 
 // Small "▲ 1.9 kg" / "▼ 0.6 kg" badge: how far the latest weight is over/under target.
 function targetBadge(latest, target) {
@@ -640,7 +640,7 @@ async function renderSettings(view) {
         </div>
         <div class="row">
           <label>Target weight (kg) <input name="target_weight_kg" type="number" min="20" max="400" step="0.1" placeholder="Optional" value="${user.target_weight_kg ?? ''}"></label>
-          <label class="check"><input type="checkbox" name="maori_mode" ${user.maori_mode ? 'checked' : ''}> <span><b>Māori Mode</b><br><span class="muted small">Takes ${MAORI_MODE_KG} kg off your weight in the BMI calculation. You'll be tagged on the BMI chart.</span></span></label>
+          <label class="check"><input type="checkbox" name="maori_mode" ${user.maori_mode ? 'checked' : ''}> <span><b>Māori Mode</b></span></label>
         </div>
         <label>Bio <textarea name="bio" maxlength="300" rows="2" placeholder="Training for a half marathon…">${esc(user.bio)}</textarea></label>
         <fieldset class="fruit-pick"><legend>Your fruit tree</legend>
@@ -745,7 +745,7 @@ function renderApiDocs(view) {
     ['GET', '/api/users', 'Everyone, with activity counts, chosen <code>fruit</code> and their <code>orchard</code> (season, stage, basket, fruit on the tree).'],
     ['GET', '/api/users/:username', 'One person with all their activities and stats.'],
     ['GET', '/api/me', 'Your own profile.'],
-    ['PATCH', '/api/me', 'Update <code>display_name</code>, <code>bio</code>, <code>height_cm</code>, <code>target_weight_kg</code>, <code>maori_mode</code> (true/false), <code>fruit</code>, <code>color</code>.'],
+    ['PATCH', '/api/me', 'Update <code>display_name</code>, <code>bio</code>, <code>height_cm</code>, <code>target_weight_kg</code>, <code>maori_mode</code>, <code>fruit</code>, <code>color</code>.'],
   ];
   view.innerHTML = `<div class="settings api-doc">
     <section class="card">

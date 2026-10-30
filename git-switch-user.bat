@@ -6,6 +6,8 @@ rem ==========================================================================
 rem  EDIT YOUR ACCOUNTS HERE  (add more by copying a block and bumping COUNT)
 rem  USER  = GitHub username (what you sign in to github.com with)
 rem  NAME  = name shown on your commits
+rem  CF_ACCOUNT = Cloudflare account ID to be logged in to for "npm run deploy"
+rem          (leave blank to skip the Cloudflare check for that profile)
 rem  EMAIL = email on your commits. Tip: for public repos use your GitHub
 rem          "noreply" address (GitHub > Settings > Emails) to keep it private.
 rem ==========================================================================
@@ -13,11 +15,14 @@ set "P1_LABEL=Personal"
 set "P1_USER=pollo-loco-nz"
 set "P1_NAME=pollo-loco-nz"
 set "P1_EMAIL=mcclintock@gmail.com"
+rem Cloudflare account this profile deploys to (blank = don't check Cloudflare)
+set "P1_CF_ACCOUNT=c22328e02814d4b4d4cdd033bb890569"
 
 set "P2_LABEL=Work"
 set "P2_USER=nathan-mcclintock"
 set "P2_NAME=nathan-mcclintock"
 set "P2_EMAIL=nathan.mcclintock@codeblue.co.nz"
+set "P2_CF_ACCOUNT="
 
 set "COUNT=2"
 rem ==========================================================================
@@ -114,6 +119,9 @@ echo.
 echo  Done - now using !P%ACC%_LABEL! (!U!).
 call :showCurrent
 
+rem ---- Cloudflare (Wrangler) login ------------------------------------------
+call :checkCloudflare
+
 rem ---- Optional test ---------------------------------------------------------
 if "%REPO%"=="GLOBAL" goto :done
 echo.
@@ -136,6 +144,57 @@ goto :done
 
 
 rem ==========================================================================
+:checkCloudflare
+rem Wrangler keeps ONE Cloudflare login for your whole Windows user, so make
+rem sure it's the account this profile deploys to.
+set "CF=!P%ACC%_CF_ACCOUNT!"
+if not defined CF goto :eof
+where npx >nul 2>&1
+if errorlevel 1 (
+  echo.
+  echo  ^(Node.js isn't installed, so skipped the Cloudflare check.^)
+  goto :eof
+)
+echo.
+echo  Checking your Cloudflare login (used by npm run deploy)...
+if "%REPO%"=="GLOBAL" (pushd "%~dp0") else (pushd "%REPO%")
+set "WHO=%TEMP%\git-switch-whoami.txt"
+call npx --yes wrangler whoami > "!WHO!" 2>&1
+findstr /i /c:"!CF!" "!WHO!" >nul
+if not errorlevel 1 (
+  echo  Cloudflare: logged in to the right account.
+  for /f "tokens=*" %%L in ('findstr /i /c:"associated with the email" "!WHO!"') do echo    %%L
+  popd
+  goto :eof
+)
+echo  Cloudflare: NOT logged in to the !P%ACC%_LABEL! account.
+for /f "tokens=*" %%L in ('findstr /i /c:"associated with the email" "!WHO!"') do echo    Currently: %%L
+set "CFL="
+set /p "CFL= Log out and sign in to Cloudflare as !P%ACC%_LABEL! now? [Y/n]: "
+if /i "!CFL!"=="n" (
+  echo  Skipped - "npm run deploy" will fail until you log in to the right account.
+  popd
+  goto :eof
+)
+call npx --yes wrangler logout >nul 2>&1
+echo.
+echo  A browser window will open. Make sure you're signed in to your
+echo  !P%ACC%_LABEL! Cloudflare account, then click Authorize.
+echo.
+call npx --yes wrangler login
+call npx --yes wrangler whoami > "!WHO!" 2>&1
+findstr /i /c:"!CF!" "!WHO!" >nul
+if errorlevel 1 (
+  echo.
+  echo  Still not the right Cloudflare account. In the browser, log out of
+  echo  dash.cloudflare.com, log in as !P%ACC%_LABEL!, then run this again.
+) else (
+  echo.
+  echo  Cloudflare: now logged in to the right account.
+)
+popd
+goto :eof
+
 :fixRemote
 rem Put the chosen username into the origin URL (https://USER@github.com/...),
 rem so pushes sign in as that account even if another one is saved.
