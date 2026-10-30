@@ -7,7 +7,7 @@ A small activity board for a group of friends: log activities and weight, grow a
 - **Invite-code sign-up**, username/password login (PBKDF2-hashed), 30-day session cookie
 - **Activities**: title, description, type, minutes, distance, date
 - **Orchard**: each person grows the fruit tree of their choice (apple, pear, orange, lemon, feijoa, plum, cherry, peach, avocado — picked in Settings). Every activity moves it one step through the seasons: grow (first season) → leaves → flowers → fruit → leaf fall → leaves… In the fruit stage each activity feeds one fruit; ripe fruit drop into the basket. ~65 activities and ~5 fruit per season. Deterministic, so it looks the same on every load. Tuning is the `ORCHARD` constant in `src/index.js`
-- **Weight**: one weigh-in (kg) per person per day, plus an optional target shown as ▲/▼ kg over/under
+- **Weight & BMI**: one weigh-in (kg) per person per day, an optional target shown as ▲/▼ kg over/under, and BMI from height in Settings. Opt-in **Māori Mode** (Settings) takes 30 kg off weight in the BMI calculation and tags you on the BMI chart
 - **Feed** down the side showing what everyone's been doing, grouped by day
 - **Dashboard**: everyone's tree and basket, leaderboard ranked by fruit, activity race, activities per day, everyone's weight, minutes per person, activity types
 - **Profiles**: big tree + basket, streaks, totals, height/weight, weekly activity, weight trend, full history (edit/delete your own)

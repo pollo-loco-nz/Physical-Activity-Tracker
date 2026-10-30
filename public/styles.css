@@ -173,6 +173,11 @@ svg.orchard .basket-n { font: 800 22px var(--font); fill: var(--text); font-vari
 .big-fruit small { font-size: 14px; font-weight: 600; color: var(--muted); }
 .fruit-ico { display: inline-block; vertical-align: -2px; flex: none; }
 svg.orchard .on-tree > g > circle:first-child, svg.orchard .on-tree > g > ellipse:first-child, svg.orchard .on-tree circle[r]:not([fill="#fff"]) { stroke: rgba(0, 0, 0, .28); stroke-width: .8; }
+.mm-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.tile .mm-tag { margin-top: 3px; }
+label.check { display: flex; align-items: flex-start; gap: 10px; color: var(--text); font-weight: 400; padding-top: 22px; cursor: pointer; }
+label.check input { width: 18px; height: 18px; margin: 2px 0 0; flex: none; accent-color: var(--accent); }
+@media (max-width: 520px) { label.check { padding-top: 0; } }
 .orchard-stage { text-align: center; font-size: 12px; color: var(--muted); }
 .stage-line { margin: 10px 0 0; font-size: 14px; }
 .stage-note { margin-left: 6px; font-weight: 600; color: var(--text); }

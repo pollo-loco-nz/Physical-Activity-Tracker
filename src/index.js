@@ -212,7 +212,7 @@ const activityOut = (r, env) => ({
 const userOut = (u, env) => {
   const out = {
     username: u.username, display_name: u.display_name, color: u.color,
-    height_cm: u.height_cm, target_weight_kg: u.target_weight_kg, bio: u.bio, created_at: u.created_at,
+    height_cm: u.height_cm, target_weight_kg: u.target_weight_kg, maori_mode: !!u.maori_mode, bio: u.bio, created_at: u.created_at,
   };
   out.fruit = u.fruit || 'apple';
   if (u.orchard) { const { ripenedIds, stageIds, ...o } = u.orchard; out.orchard = o; }
@@ -306,6 +306,10 @@ async function updateMe({ env, user, body }) {
   if ('fruit' in body) {
     if (!FRUITS.includes(body.fruit)) throw new HttpError(400, `fruit must be one of: ${FRUITS.join(', ')}`);
     sets.fruit = body.fruit;
+  }
+  if ('maori_mode' in body) {
+    if (typeof body.maori_mode !== 'boolean') throw new HttpError(400, 'maori_mode must be true or false');
+    sets.maori_mode = body.maori_mode ? 1 : 0;
   }
   if ('target_weight_kg' in body) sets.target_weight_kg = num(body.target_weight_kg, 'target_weight_kg', 20, 400);
   if ('color' in body) {

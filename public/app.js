@@ -248,6 +248,15 @@ function makeChart(id, config, emptyMsg) {
   box.innerHTML = '<canvas></canvas>';
   state.charts.push(new Chart(box.querySelector('canvas'), config));
 }
+// BMI = kg / m². Māori Mode (opt-in, per person) takes 30 kg off the weight first.
+const MAORI_MODE_KG = 30;
+function bmi(weightKg, u) {
+  if (weightKg == null || !u.height_cm) return null;
+  const m = u.height_cm / 100;
+  return (weightKg - (u.maori_mode ? MAORI_MODE_KG : 0)) / (m * m);
+}
+const maoriTag = (u) => (u.maori_mode ? `<span class="mm-tag" title="BMI uses weight minus ${MAORI_MODE_KG} kg">Māori Mode</span>` : '');
+
 // Small "▲ 1.9 kg" / "▼ 0.6 kg" badge: how far the latest weight is over/under target.
 function targetBadge(latest, target) {
   if (latest == null || target == null) return '';
@@ -352,14 +361,26 @@ async function renderDashboard(view) {
       <div class="card-head"><h2>Activities per day</h2><span class="muted">Last 30 days</span></div>
       <div class="chart-box" id="c-daily"></div>
     </section>
-    <section class="card">
-      <div class="card-head"><h2>Weight</h2><span class="muted">kg, last 90 days</span></div>
-      <div class="chart-box" id="c-weight"></div>
-      ${(() => {
-        const wp = users.filter((u) => u.latest_weight_kg != null);
-        return wp.length ? `<div class="wlist">${wp.map((u) => `<div class="witem">${avatar(u, 'sm')}<span class="wname">${userLink(u)}</span><span class="wval">${fmtNum(u.latest_weight_kg, 1)} kg</span>${targetBadge(u.latest_weight_kg, u.target_weight_kg)}</div>`).join('')}</div>` : '';
-      })()}
-    </section>
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-head"><h2>Weight</h2><span class="muted">kg, last 90 days</span></div>
+        <div class="chart-box" id="c-weight"></div>
+        ${(() => {
+          const wp = users.filter((u) => u.latest_weight_kg != null);
+          return wp.length ? `<div class="wlist">${wp.map((u) => `<div class="witem">${avatar(u, 'sm')}<span class="wname">${userLink(u)}</span><span class="wval">${fmtNum(u.latest_weight_kg, 1)} kg</span>${targetBadge(u.latest_weight_kg, u.target_weight_kg)}</div>`).join('')}</div>` : '';
+        })()}
+      </section>
+      <section class="card">
+        <div class="card-head"><h2>BMI</h2><span class="muted">last 90 days</span></div>
+        <div class="chart-box" id="c-bmi"></div>
+        ${(() => {
+          const bp = users.filter((u) => bmi(u.latest_weight_kg, u) != null);
+          const noHeight = users.filter((u) => u.latest_weight_kg != null && !u.height_cm);
+          return (bp.length ? `<div class="wlist">${bp.map((u) => `<div class="witem">${avatar(u, 'sm')}<span class="wname">${userLink(u)}</span><span class="wval">${fmtNum(bmi(u.latest_weight_kg, u), 1)}</span>${maoriTag(u)}</div>`).join('')}</div>` : '') +
+            (noHeight.length ? `<p class="muted small" style="margin:10px 0 0">No height set: ${noHeight.map((u) => esc(u.display_name)).join(', ')} — add it in Settings to appear here.</p>` : '');
+        })()}
+      </section>
+    </div>
     <div class="grid-2">
       <section class="card">
         <div class="card-head"><h2>Minutes moved</h2><span class="muted">Last 30 days</span></div>
@@ -424,8 +445,27 @@ async function renderDashboard(view) {
         };
       }),
     },
-    options: { scales: { x: { ticks: { maxTicksLimit: 8 } } } },
+    options: { scales: { x: { ticks: { maxTicksLimit: 6 } } } },
   }, 'No weight logged yet — use + Log → Weight');
+
+  const bmiPeople = weightPeople.filter((u) => u.height_cm);
+  makeChart('c-bmi', {
+    type: 'line',
+    data: {
+      labels: wDays.map(shortDay),
+      datasets: bmiPeople.map((u) => {
+        const map = Object.fromEntries(weights.filter((w) => w.username === u.username).map((w) => [w.date, bmi(w.weight_kg, u)]));
+        return {
+          label: u.maori_mode ? `${u.display_name} (Māori Mode)` : u.display_name,
+          borderColor: u.color, backgroundColor: u.color,
+          borderDash: u.maori_mode ? [6, 4] : [], pointStyle: u.maori_mode ? 'rectRot' : 'circle',
+          data: wDays.map((d) => (map[dayKey(d)] != null ? Math.round(map[dayKey(d)] * 10) / 10 : null)),
+          spanGaps: true, tension: 0.25, pointRadius: u.maori_mode ? 3.5 : 2.5, pointHoverRadius: 5, borderWidth: 2,
+        };
+      }),
+    },
+    options: { scales: { x: { ticks: { maxTicksLimit: 6 } } } },
+  }, 'Needs weight plus height (Settings)');
 
   const minutes = people.map((u) => activities.filter((a) => a.username === u.username).reduce((s, a) => s + (a.duration_min || 0), 0));
   makeChart('c-minutes', {
@@ -495,6 +535,7 @@ async function renderProfile(view, username) {
       <div class="tile"><div class="label">Distance</div><div class="value">${fmtNum(totalKm, 1)} <small>km</small></div></div>
       <div class="tile"><div class="label">Height</div><div class="value">${user.height_cm ? fmtNum(user.height_cm) + ' <small>cm</small>' : '—'}</div></div>
       <div class="tile"><div class="label">Weight</div><div class="value">${latestWeight ? fmtNum(latestWeight.weight_kg, 1) + ' <small>kg</small>' : '—'}</div>${targetBadge(latestWeight?.weight_kg, user.target_weight_kg)}</div>
+      <div class="tile"><div class="label">BMI</div><div class="value">${bmi(latestWeight?.weight_kg, user) != null ? fmtNum(bmi(latestWeight.weight_kg, user), 1) : '—'}</div>${maoriTag(user)}</div>
       <div class="tile"><div class="label">Target</div><div class="value">${user.target_weight_kg != null ? fmtNum(user.target_weight_kg, 1) + ' <small>kg</small>' : '—'}</div></div>
     </div>
     <div class="grid-2">
@@ -599,7 +640,7 @@ async function renderSettings(view) {
         </div>
         <div class="row">
           <label>Target weight (kg) <input name="target_weight_kg" type="number" min="20" max="400" step="0.1" placeholder="Optional" value="${user.target_weight_kg ?? ''}"></label>
-          <span></span>
+          <label class="check"><input type="checkbox" name="maori_mode" ${user.maori_mode ? 'checked' : ''}> <span><b>Māori Mode</b><br><span class="muted small">Takes ${MAORI_MODE_KG} kg off your weight in the BMI calculation. You'll be tagged on the BMI chart.</span></span></label>
         </div>
         <label>Bio <textarea name="bio" maxlength="300" rows="2" placeholder="Training for a half marathon…">${esc(user.bio)}</textarea></label>
         <fieldset class="fruit-pick"><legend>Your fruit tree</legend>
@@ -649,6 +690,7 @@ async function renderSettings(view) {
         height_cm: f.height_cm.value === '' ? null : Number(f.height_cm.value),
         target_weight_kg: f.target_weight_kg.value === '' ? null : Number(f.target_weight_kg.value),
         fruit: f.fruit.value,
+        maori_mode: f.maori_mode.checked,
       } });
       state.me = u;
       renderMe();
@@ -703,7 +745,7 @@ function renderApiDocs(view) {
     ['GET', '/api/users', 'Everyone, with activity counts, chosen <code>fruit</code> and their <code>orchard</code> (season, stage, basket, fruit on the tree).'],
     ['GET', '/api/users/:username', 'One person with all their activities and stats.'],
     ['GET', '/api/me', 'Your own profile.'],
-    ['PATCH', '/api/me', 'Update <code>display_name</code>, <code>bio</code>, <code>height_cm</code>, <code>target_weight_kg</code>, <code>fruit</code>, <code>color</code>.'],
+    ['PATCH', '/api/me', 'Update <code>display_name</code>, <code>bio</code>, <code>height_cm</code>, <code>target_weight_kg</code>, <code>maori_mode</code> (true/false), <code>fruit</code>, <code>color</code>.'],
   ];
   view.innerHTML = `<div class="settings api-doc">
     <section class="card">
